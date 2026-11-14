@@ -1,56 +1,68 @@
-# Welcome to your Expo app 👋
+# WeGo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Carpooling app for school classes. Students and teachers share rides, matched by route and class code.
 
-## Get started
+> School project, work in progress.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Class-code onboarding
+- Map view with live location
+- Ride matching with nearby drivers (mock data for now)
+- Burger menu with swipe gestures
+- Profile and settings: theme (dark / light / system), language (English / Deutsch), notifications, units, haptics
+- i18n with automatic device language detection
 
-2. Start the app
+## Tech stack
 
-   ```bash
-   npx expo start
-   ```
+- [Expo](https://expo.dev) (SDK 58) with Expo Router
+- React Native, TypeScript
+- `react-native-maps`, `expo-location`
+- `i18next`, `react-i18next`, `expo-localization`
+- `react-native-gesture-handler`
+- `@react-native-async-storage/async-storage`
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting started
 
 ```bash
-npm run reset-project
+git clone https://github.com/BleistiftGHG/WeGo.git
+cd WeGo
+npm install
+npx expo start -c
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Open the app in Expo Go or a development build.
 
-### Other setup steps
+For Android maps, a Google Maps API key is required. Put it in a local `.env` file (not committed).
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Project structure
 
-## Learn more
+```
+src/
+├── app/            Routes (Expo Router)
+│   ├── (tabs)/     Map, Rides, Messages
+│   ├── index.tsx   Onboarding
+│   ├── matching.tsx
+│   └── profile.tsx
+├── components/     Reusable UI
+├── constants/      Theme, map style, mock drivers
+├── context/        Settings and theme provider
+├── hooks/          useUserLocation
+├── i18n/           Translations (en, de)
+└── lib/            Storage helpers
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Roadmap
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- [ ] Backend and auth (replace hardcoded class codes)
+- [ ] Offer a ride (start, destination, time, seats)
+- [ ] Search and book rides
+- [ ] Rides tab: own rides, requests, history
+- [ ] Messages between driver and passenger
+- [ ] Editable profile (name, photo, vehicle)
+- [ ] Push notifications
+- [ ] Privacy and safety (GDPR, report/block)
 
-## Join the community
+## License
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+MIT, see [LICENSE](LICENSE).
