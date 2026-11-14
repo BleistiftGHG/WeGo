@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { LanguagePref } from '@/i18n';
 
 export type ThemeMode = 'dark' | 'light' | 'system';
 
 export type StoredValues = {
   theme: ThemeMode;
+  language: LanguagePref;
   classCode: string | null;
   notifications: boolean;
   metric: boolean;
@@ -12,6 +14,7 @@ export type StoredValues = {
 
 export const defaults: StoredValues = {
   theme: 'dark',
+  language: 'system',
   classCode: null,
   notifications: true,
   metric: true,

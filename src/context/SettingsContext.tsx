@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useColorScheme, View } from 'react-native';
 import { darkColors, getTypography, lightColors, type Palette } from '@/constants/theme';
+import i18n, { resolveLanguage } from '@/i18n';
 import { defaults, loadAll, removeItem, setItem, type StoredValues } from '@/lib/storage';
 
 type Theme = {
@@ -32,11 +33,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    loadAll().then((stored) => {
+    loadAll().then(async (stored) => {
+      await i18n.changeLanguage(resolveLanguage(stored.language));
       setSettings(stored);
       setReady(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    i18n.changeLanguage(resolveLanguage(settings.language));
+  }, [ready, settings.language]);
 
   const update = useCallback(
     <K extends keyof StoredValues>(key: K, value: StoredValues[K]) => {

@@ -1,64 +1,65 @@
-import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
-import { colors, spacing, typography } from "@/constants/theme";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Redirect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { spacing } from '@/constants/theme';
+import { useSettings, useTheme } from '@/context/SettingsContext';
 
-const VALID_CODES = ["WEGO-10A", "WEGO-10B", "WEGO-11C", "TEST"];
+const VALID_CODES = ['WEGO-10A', 'WEGO-10B', 'WEGO-11C', 'TEST'];
 
 export default function Onboarding() {
-  const router = useRouter();
-  const [code, setCode] = useState("");
+  const { t } = useTranslation();
+  const { colors, typography } = useTheme();
+  const { settings, update } = useSettings();
+  const [code, setCode] = useState('');
   const [hasError, setHasError] = useState(false);
 
+  if (settings.classCode) {
+    return <Redirect href="/home" />;
+  }
+
   const handleContinue = () => {
-    if (VALID_CODES.includes(code.trim().toUpperCase())) {
-      router.replace("/(tabs)");
+    const normalized = code.trim().toUpperCase();
+    if (VALID_CODES.includes(normalized)) {
+      update('classCode', normalized);
     } else {
       setHasError(true);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
-          <Text style={styles.brand}>WeGo</Text>
+          <Text style={[typography.heading, styles.brand]}>WeGo</Text>
 
           <View style={styles.form}>
-            <Text style={styles.title}>Enter your class code</Text>
+            <Text style={[typography.title, styles.title]}>{t('onboarding.title')}</Text>
             <Input
               value={code}
               onChangeText={(text) => {
                 setCode(text);
                 setHasError(false);
               }}
-              placeholder="Class code"
+              placeholder={t('onboarding.placeholder')}
               autoCapitalize="characters"
               autoCorrect={false}
               returnKeyType="done"
               onSubmitEditing={handleContinue}
             />
             <Button
-              label="Continue"
+              label={t('onboarding.continue')}
               onPress={handleContinue}
               disabled={code.trim().length === 0}
             />
-            <Text style={styles.helper}>
-              {hasError
-                ? "That code isn't valid. Check it with your teacher."
-                : "Your teacher gives you a unique code for your class."}
+            <Text style={[typography.caption, styles.helper]}>
+              {hasError ? t('onboarding.invalid') : t('onboarding.helper')}
             </Text>
           </View>
         </View>
@@ -70,18 +71,16 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
     padding: spacing.md,
   },
   brand: {
-    ...typography.heading,
     marginTop: spacing.md,
   },
   form: {
@@ -89,11 +88,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   title: {
-    ...typography.title,
     marginBottom: spacing.xs,
   },
   helper: {
-    ...typography.caption,
-    textAlign: "center",
+    textAlign: 'center',
   },
 });

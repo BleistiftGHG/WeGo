@@ -1,3 +1,4 @@
+import "@/i18n";
 import { SettingsProvider, useTheme } from "@/context/SettingsContext";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +18,18 @@ function Navigator() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+        <Stack.Screen
+          name="profile"
+          options={{
+            headerShown: true,
+            headerTitle: "",
+            headerBackButtonDisplayMode: "minimal",
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
+            animation: "slide_from_right",
+          }}
+        />
         <Stack.Screen
           name="matching"
           options={{

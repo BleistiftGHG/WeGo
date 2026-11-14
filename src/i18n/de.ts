@@ -1,0 +1,51 @@
+import type { Translation } from './en';
+
+export const de: Translation = {
+  onboarding: {
+    title: 'Gib deinen Klassencode ein',
+    placeholder: 'Klassencode',
+    continue: 'Weiter',
+    invalid: 'Dieser Code ist ungültig. Frag deine Lehrkraft.',
+    helper: 'Deine Lehrkraft gibt dir einen eigenen Code für deine Klasse.',
+  },
+  tabs: {
+  map: 'Karte',
+  rides: 'Fahrten',
+  messages: 'Nachrichten',
+  profile: 'Profil',
+},
+placeholder: {
+  soon: 'Kommt bald',
+},
+  home: {
+    findRide: 'Fahrt finden',
+  },
+  menu: {
+  open: 'Menü öffnen',
+  close: 'Menü schließen',
+},
+  matching: {
+    title: 'Fahrten in deiner Nähe',
+    subtitle: 'Passend zu deiner Route und Klasse',
+  },
+  profile: {
+    title: 'Profil',
+    account: 'Konto',
+    name: 'Name',
+    classCode: 'Klassencode',
+    appearance: 'Darstellung',
+    themeDark: 'Dunkel',
+    themeLight: 'Hell',
+    themeSystem: 'System',
+    language: 'Sprache',
+    notifications: 'Benachrichtigungen',
+    rideSuggestions: 'Fahrtvorschläge',
+    preferences: 'Einstellungen',
+    metric: 'Metrische Einheiten',
+    haptics: 'Haptik',
+    about: 'Über',
+    version: 'Version',
+    signOut: 'Abmelden',
+    languageSystem: 'System',
+  },
+};

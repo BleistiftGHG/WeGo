@@ -3,16 +3,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { SettingRow } from '@/components/SettingRow';
 import { radii, spacing } from '@/constants/theme';
 import { useSettings, useTheme } from '@/context/SettingsContext';
+import { LANGUAGES, type LanguagePref } from '@/i18n';
 import type { ThemeMode } from '@/lib/storage';
-
-const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
-  { label: 'Dark', value: 'dark' },
-  { label: 'Light', value: 'light' },
-  { label: 'System', value: 'system' },
-];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   const { colors, typography } = useTheme();
@@ -27,21 +23,28 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function ThemePicker() {
+function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { label: string; value: T }[];
+  value: T;
+  onChange: (next: T) => void;
+}) {
   const { colors } = useTheme();
-  const { settings, update } = useSettings();
 
   return (
     <View style={[styles.pickerRow, { borderBottomColor: colors.divider }]}>
       <View style={[styles.segmented, { backgroundColor: colors.input }]}>
-        {THEME_OPTIONS.map((option) => {
-          const selected = settings.theme === option.value;
+        {options.map((option) => {
+          const selected = value === option.value;
           return (
             <Pressable
               key={option.value}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              onPress={() => update('theme', option.value)}
+              onPress={() => onChange(option.value)}
               style={[styles.segment, selected && { backgroundColor: colors.surface }]}
             >
               <Text
@@ -62,8 +65,20 @@ function ThemePicker() {
 
 export default function Profile() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { colors, typography } = useTheme();
   const { settings, update, signOut } = useSettings();
+
+  const themeOptions: { label: string; value: ThemeMode }[] = [
+    { label: t('profile.themeDark'), value: 'dark' },
+    { label: t('profile.themeLight'), value: 'light' },
+    { label: t('profile.themeSystem'), value: 'system' },
+  ];
+
+  const languageOptions: { label: string; value: LanguagePref }[] = [
+    { label: t('profile.languageSystem'), value: 'system' },
+    ...LANGUAGES.map((l) => ({ label: l.label, value: l.value as LanguagePref })),
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -71,22 +86,34 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={[]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[typography.title, styles.title]}>Profile</Text>
+        <Text style={[typography.title, styles.title]}>{t('profile.title')}</Text>
 
-        <Section title="Account">
-          <SettingRow label="Name" value="Alex Meyer" />
-          <SettingRow label="Class code" value={settings.classCode ?? '—'} />
+        <Section title={t('profile.account')}>
+          <SettingRow label={t('profile.name')} value="Alex Meyer" />
+          <SettingRow label={t('profile.classCode')} value={settings.classCode ?? '—'} />
         </Section>
 
-        <Section title="Appearance">
-          <ThemePicker />
+        <Section title={t('profile.appearance')}>
+          <Segmented
+            options={themeOptions}
+            value={settings.theme}
+            onChange={(next) => update('theme', next)}
+          />
         </Section>
 
-        <Section title="Notifications">
+        <Section title={t('profile.language')}>
+          <Segmented
+            options={languageOptions}
+            value={settings.language}
+            onChange={(next) => update('language', next)}
+          />
+        </Section>
+
+        <Section title={t('profile.notifications')}>
           <SettingRow
-            label="Ride suggestions"
+            label={t('profile.rideSuggestions')}
             toggle={{
               value: settings.notifications,
               onChange: (next) => update('notifications', next),
@@ -94,20 +121,23 @@ export default function Profile() {
           />
         </Section>
 
-        <Section title="Preferences">
+        <Section title={t('profile.preferences')}>
           <SettingRow
-            label="Metric units"
+            label={t('profile.metric')}
             toggle={{ value: settings.metric, onChange: (next) => update('metric', next) }}
           />
           <SettingRow
-            label="Haptics"
+            label={t('profile.haptics')}
             toggle={{ value: settings.haptics, onChange: (next) => update('haptics', next) }}
           />
         </Section>
 
-        <Section title="About">
-          <SettingRow label="Version" value={Constants.expoConfig?.version ?? '1.0.0'} />
-          <SettingRow label="Sign out" onPress={handleSignOut} />
+        <Section title={t('profile.about')}>
+          <SettingRow
+            label={t('profile.version')}
+            value={Constants.expoConfig?.version ?? '1.0.0'}
+          />
+          <SettingRow label={t('profile.signOut')} onPress={handleSignOut} />
         </Section>
       </ScrollView>
     </SafeAreaView>
