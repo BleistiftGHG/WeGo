@@ -6,6 +6,15 @@ import { StatusBar } from "expo-status-bar";
 function Navigator() {
   const { colors, isDark } = useTheme();
 
+  const subScreen = {
+    headerShown: true,
+    headerTitle: "",
+    headerBackButtonDisplayMode: "minimal" as const,
+    headerTransparent: true,
+    headerTintColor: colors.text,
+    animation: "slide_from_right" as const,
+  };
+
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -21,37 +30,15 @@ function Navigator() {
         <Stack.Screen
           name="profile"
           options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackButtonDisplayMode: "minimal",
+            ...subScreen,
+            headerTransparent: false,
             headerShadowVisible: false,
             headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.text,
-            animation: "slide_from_right",
           }}
         />
-        <Stack.Screen
-          name="offer"
-          options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackButtonDisplayMode: "minimal",
-            headerTransparent: true,
-            headerTintColor: colors.text,
-            animation: "slide_from_right",
-          }}
-        />
-        <Stack.Screen
-          name="matching"
-          options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackButtonDisplayMode: "minimal",
-            headerTransparent: true,
-            headerTintColor: "#FFFFFF",
-            animation: "slide_from_right",
-          }}
-        />
+        <Stack.Screen name="matching" options={subScreen} />
+        <Stack.Screen name="offer" options={subScreen} />
+        <Stack.Screen name="schools" options={subScreen} />
       </Stack>
     </>
   );

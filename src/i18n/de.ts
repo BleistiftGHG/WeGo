@@ -85,6 +85,9 @@ export const de: Translation = {
     searchTown: 'Anderen Ort suchen',
     searchSchool: 'Andere Schule suchen',
     noHits: 'Keine Treffer.',
+    browseSchools: 'Aus Schulliste wählen',
+    schoolsTitle: 'Schule wählen',
+    schoolsEmpty: 'Noch keine Schulen verfügbar.',
   },
   requests: {
     request: 'Mitfahren',

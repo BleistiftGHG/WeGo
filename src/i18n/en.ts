@@ -80,6 +80,9 @@ export const en = {
     yourSchool: 'Your school',
     searching: 'Searching nearby…',
     noResults: 'Nothing found nearby.',
+    browseSchools: 'Choose from school list',
+    schoolsTitle: 'Choose a school',
+    schoolsEmpty: 'No schools available yet.',
   },
   requests: {
     request: 'Request a seat',
