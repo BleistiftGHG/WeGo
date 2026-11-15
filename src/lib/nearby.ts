@@ -13,6 +13,11 @@ const ENDPOINTS = [
   'https://overpass.kumi.systems/api/interpreter',
 ];
 
+const NOMINATIM_HEADERS = {
+  'User-Agent': 'WeGo/1.0 (school project)',
+  Accept: 'application/json',
+};
+
 export function distanceMeters(a: Point, b: { lat: number; lng: number }) {
   const R = 6371000;
   const rad = (x: number) => (x * Math.PI) / 180;
@@ -26,12 +31,14 @@ export function distanceMeters(a: Point, b: { lat: number; lng: number }) {
 
 export function formatDistance(meters: number, metric: boolean) {
   if (metric) {
-    return meters < 1000 ? `${Math.round(meters / 10) * 10} m` : `${(meters / 1000).toFixed(1)} km`;
+    return meters < 1000
+      ? `${Math.round(meters / 10) * 10} m`
+      : `${(meters / 1000).toFixed(1)} km`;
   }
   return `${(meters / 1609.34).toFixed(1)} mi`;
 }
 
-async function overpass(query: string) {
+async function overpass(query: string): Promise<{ elements: any[] }> {
   for (const url of ENDPOINTS) {
     try {
       const controller = new AbortController();
@@ -85,4 +92,32 @@ export async function fetchNearbyTowns(origin: Point, radius = 12000) {
     `[out:json][timeout:12];node["place"~"^(city|town|village|suburb)$"](around:${radius},${lat},${lng});out tags 60;`,
   );
   return toPlaces(data.elements, origin, 8);
+}
+
+async function nominatim(
+  query: string,
+  near: Point | null | undefined,
+  delta: number,
+  extra = '',
+): Promise<{ lat: number; lng: number } | null> {
+  try {
+    let url = `https://nominatim.openstreetmap.org/search?format=json&limit=1${extra}&q=${encodeURIComponent(query)}`;
+    if (near) {
+      url += `&viewbox=${near.longitude - delta},${near.latitude + delta},${near.longitude + delta},${near.latitude - delta}&bounded=1`;
+    }
+    const res = await fetch(url, { headers: NOMINATIM_HEADERS });
+    if (!res.ok) return null;
+    const [hit] = (await res.json()) as { lat: string; lon: string }[];
+    return hit ? { lat: parseFloat(hit.lat), lng: parseFloat(hit.lon) } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function geocodeTown(town: string, near?: Point | null) {
+  return nominatim(town, near, 0.3, '&featuretype=settlement');
+}
+
+export function geocodeMeetingPoint(query: string, near?: Point | null) {
+  return nominatim(query, near, 0.1);
 }

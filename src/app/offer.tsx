@@ -24,6 +24,8 @@ import {
   fetchNearbySchools,
   fetchNearbyTowns,
   formatDistance,
+  geocodeMeetingPoint,
+  geocodeTown,
   type Place,
 } from '@/lib/nearby';
 import { supabase } from '@/lib/supabase';
@@ -220,11 +222,9 @@ export default function Offer() {
     : fromKey === CURRENT
       ? currentTown
       : (pickedTown?.name ?? '');
-  const originLat = fromKey === CURRENT ? coords?.latitude : pickedTown?.lat;
-  const originLng = fromKey === CURRENT ? coords?.longitude : pickedTown?.lng;
 
   const inFuture = departure.getTime() > Date.now();
-  const canSave = townName && meetingPoint.trim() && school && inFuture && !saving;
+  const canSave = !!townName && !!meetingPoint.trim() && !!school && inFuture && !saving;
 
   const setDate = (picked: Date) =>
     setDeparture((prev) => {
@@ -254,6 +254,17 @@ export default function Offer() {
 
     const matched = dbSchools.find((s) => s.name.toLowerCase() === school.name.toLowerCase());
 
+    const center = pickedTown
+      ? { lat: pickedTown.lat, lng: pickedTown.lng }
+      : await geocodeTown(townName, coords);
+    const pinLat = center?.lat ?? coords?.latitude ?? 0;
+    const pinLng = center?.lng ?? coords?.longitude ?? 0;
+
+    const spot = await geocodeMeetingPoint(
+      `${meetingPoint.trim()}, ${townName}`,
+      center ? { latitude: center.lat, longitude: center.lng } : coords,
+    );
+
     const { error } = await supabase.from('rides').insert({
       driver_id: auth.user?.id,
       class_id: profile?.class_id,
@@ -261,8 +272,10 @@ export default function Offer() {
       origin_town: townName,
       meeting_point: meetingPoint.trim(),
       origin_name: `${townName}, ${meetingPoint.trim()}`,
-      origin_lat: originLat ?? 0,
-      origin_lng: originLng ?? 0,
+      origin_lat: pinLat,
+      origin_lng: pinLng,
+      meeting_lat: spot?.lat ?? null,
+      meeting_lng: spot?.lng ?? null,
       destination_name: school.name,
       destination_lat: school.lat,
       destination_lng: school.lng,
@@ -406,7 +419,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   optionText: { flex: 1, gap: 2 },
-  searching: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingTop: spacing.xs },
+  searching: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingTop: spacing.xs,
+  },
   stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
