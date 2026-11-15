@@ -61,6 +61,17 @@ export const en = {
     seatsLeft_one: "{{count}} seat",
     seatsLeft_other: "{{count}} seats",
     delete: "Delete",
+    date: 'Date',
+    pastError: 'Departure must be in the future.',
+    fromTown: 'From (town)',
+    meetingPoint: 'Meeting point',
+    toSchool: 'To (school)',
+    currentLocation: 'Current location',
+    nearbyTowns: 'Nearby towns',
+    nearbySchools: 'Schools nearby',
+    yourSchool: 'Your school',
+    searching: 'Searching nearby…',
+    noResults: 'Nothing found nearby.',
   },
 };
 
