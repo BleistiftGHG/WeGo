@@ -7,28 +7,57 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { spacing } from '@/constants/theme';
 import { useSettings, useTheme } from '@/context/SettingsContext';
+import { supabase } from '@/lib/supabase';
 
-const VALID_CODES = ['WEGO-10A', 'WEGO-10B', 'WEGO-11C', 'TEST'];
+type ErrorKind = 'invalid' | 'network' | null;
 
 export default function Onboarding() {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
   const { settings, update } = useSettings();
   const [code, setCode] = useState('');
-  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState<ErrorKind>(null);
+  const [loading, setLoading] = useState(false);
 
   if (settings.classCode) {
     return <Redirect href="/home" />;
   }
 
-  const handleContinue = () => {
-    const normalized = code.trim().toUpperCase();
-    if (VALID_CODES.includes(normalized)) {
-      update('classCode', normalized);
-    } else {
-      setHasError(true);
+  const handleContinue = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const { error: authError } = await supabase.auth.signInAnonymously();
+        if (authError) throw authError;
+      }
+
+      const { data, error: rpcError } = await supabase.rpc('join_class', {
+        p_code: code.trim(),
+      });
+      if (rpcError) throw rpcError;
+
+      if (data) {
+        update('classCode', data as string);
+      } else {
+        setError('invalid');
+      }
+    } catch {
+      setError('network');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const helper =
+    error === 'invalid'
+      ? t('onboarding.invalid')
+      : error === 'network'
+        ? t('onboarding.networkError')
+        : t('onboarding.helper');
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
@@ -45,7 +74,7 @@ export default function Onboarding() {
               value={code}
               onChangeText={(text) => {
                 setCode(text);
-                setHasError(false);
+                setError(null);
               }}
               placeholder={t('onboarding.placeholder')}
               autoCapitalize="characters"
@@ -56,11 +85,9 @@ export default function Onboarding() {
             <Button
               label={t('onboarding.continue')}
               onPress={handleContinue}
-              disabled={code.trim().length === 0}
+              disabled={code.trim().length === 0 || loading}
             />
-            <Text style={[typography.caption, styles.helper]}>
-              {hasError ? t('onboarding.invalid') : t('onboarding.helper')}
-            </Text>
+            <Text style={[typography.caption, styles.helper]}>{helper}</Text>
           </View>
         </View>
       </KeyboardAvoidingView>

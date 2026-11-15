@@ -7,6 +7,7 @@ export const de: Translation = {
     continue: 'Weiter',
     invalid: 'Dieser Code ist ungültig. Frag deine Lehrkraft.',
     helper: 'Deine Lehrkraft gibt dir einen eigenen Code für deine Klasse.',
+    networkError: 'Etwas ist schiefgelaufen. Prüfe deine Verbindung und versuch es nochmal.',
   },
   tabs: {
   map: 'Karte',

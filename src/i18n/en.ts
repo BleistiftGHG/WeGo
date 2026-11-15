@@ -5,6 +5,7 @@ export const en = {
     continue: 'Continue',
     invalid: "That code isn't valid. Check it with your teacher.",
     helper: 'Your teacher gives you a unique code for your class.',
+    networkError: 'Something went wrong. Check your connection and try again.',
   },
   tabs: {
   map: 'Map',
