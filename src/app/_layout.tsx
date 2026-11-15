@@ -31,6 +31,17 @@ function Navigator() {
           }}
         />
         <Stack.Screen
+          name="offer"
+          options={{
+            headerShown: true,
+            headerTitle: "",
+            headerBackButtonDisplayMode: "minimal",
+            headerTransparent: true,
+            headerTintColor: colors.text,
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
           name="matching"
           options={{
             headerShown: true,
