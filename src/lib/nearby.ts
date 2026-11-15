@@ -4,6 +4,7 @@ export type Place = {
   lat: number;
   lng: number;
   distance: number;
+  detail?: string;
 };
 
 type Point = { latitude: number; longitude: number };
@@ -120,4 +121,74 @@ export function geocodeTown(town: string, near?: Point | null) {
 
 export function geocodeMeetingPoint(query: string, near?: Point | null) {
   return nominatim(query, near, 0.1);
+}
+
+export async function searchPlaces(
+  query: string,
+  kind: 'town' | 'school',
+  near?: Point | null,
+): Promise<Place[]> {
+  const nominatimHits = async (): Promise<Place[]> => {
+    try {
+      let url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=${
+        kind === 'school' ? 40 : 10
+      }&q=${encodeURIComponent(query)}`;
+      if (kind === 'town') url += '&featuretype=settlement';
+      if (near) {
+        const d = 1;
+        url += `&viewbox=${near.longitude - d},${near.latitude + d},${near.longitude + d},${near.latitude - d}`;
+      }
+      const res = await fetch(url, { headers: NOMINATIM_HEADERS });
+      if (!res.ok) return [];
+      const hits = (await res.json()) as any[];
+
+      const out: Place[] = [];
+      for (const h of hits) {
+        if (kind === 'school' && h.type !== 'school') continue;
+        const lat = parseFloat(h.lat);
+        const lng = parseFloat(h.lon);
+        const parts = String(h.display_name ?? '')
+          .split(',')
+          .map((s) => s.trim());
+        const name: string = h.name || parts[0];
+        if (!name || Number.isNaN(lat) || Number.isNaN(lng)) continue;
+        out.push({
+          id: `osm-${h.osm_type}-${h.osm_id}`,
+          name,
+          lat,
+          lng,
+          detail: parts.slice(1, 3).join(', ') || undefined,
+          distance: near ? distanceMeters(near, { lat, lng }) : 0,
+        });
+      }
+      return out;
+    } catch {
+      return [];
+    }
+  };
+
+  const overpassHits = async (): Promise<Place[]> => {
+    if (kind !== 'school' || !near) return [];
+    const safe = query.replace(/[^\p{L}\p{N} .-]/gu, '').trim();
+    if (safe.length < 3) return [];
+    const words = safe.split(/\s+/).filter((w) => w.length > 1);
+    const regex = words.map((w) => `(?=.*${w})`).join('');
+    const { latitude: lat, longitude: lng } = near;
+    const data = await overpass(
+      `[out:json][timeout:12];nwr["amenity"="school"]["name"~"^${regex}.*$",i](around:60000,${lat},${lng});out center tags 40;`,
+    );
+    return toPlaces(data.elements, near, 10);
+  };
+
+  const [a, b] = await Promise.all([overpassHits(), nominatimHits()]);
+
+  const seen = new Set<string>();
+  const merged: Place[] = [];
+  for (const p of [...a, ...b]) {
+    const key = p.name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(p);
+  }
+  return merged.slice(0, 6);
 }

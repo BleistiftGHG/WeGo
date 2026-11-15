@@ -97,6 +97,9 @@ export const en = {
     confirmed_one: '{{count}} confirmed',
     confirmed_other: '{{count}} confirmed',
     error: 'Something went wrong. Try again.',
+    searchTown: 'Search another town',
+    searchSchool: 'Search another school',
+    noHits: 'No results.',
   },
 };
 

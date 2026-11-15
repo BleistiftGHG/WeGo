@@ -82,6 +82,9 @@ export const de: Translation = {
     yourSchool: 'Deine Schule',
     searching: 'Suche in der Nähe…',
     noResults: 'Nichts in der Nähe gefunden.',
+    searchTown: 'Anderen Ort suchen',
+    searchSchool: 'Andere Schule suchen',
+    noHits: 'Keine Treffer.',
   },
   requests: {
     request: 'Mitfahren',
