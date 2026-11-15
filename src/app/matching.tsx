@@ -11,6 +11,7 @@ import { radii, spacing } from '@/constants/theme';
 import { useSettings, useTheme } from '@/context/SettingsContext';
 import { useUserLocation, type Coords } from '@/hooks/useUserLocation';
 import { distanceMeters, formatDistance } from '@/lib/nearby';
+import { cancelRequest, fetchRequests, requestRide, type RideRequest } from '@/lib/requests';
 import { supabase } from '@/lib/supabase';
 
 const FALLBACK_ORIGIN: Coords = { latitude: 51.1657, longitude: 10.4515 };
@@ -45,22 +46,24 @@ export default function Matching() {
   const { status, coords, enable } = useUserLocation();
 
   const [rides, setRides] = useState<Ride[]>([]);
+  const [requests, setRequests] = useState<RideRequest[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
     const { data: auth } = await supabase.auth.getUser();
     setUserId(auth.user?.id ?? null);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('rides')
       .select(
         'id, driver_id, origin_name, origin_lat, origin_lng, origin_town, meeting_point, meeting_lat, meeting_lng, destination_name, departure_time, seats, note',
       )
       .gte('departure_time', new Date().toISOString())
       .order('departure_time', { ascending: true });
-    setLoadError(error ? error.message : null);
     setRides((data as Ride[]) ?? []);
+    setRequests(await fetchRequests());
   }, []);
 
   useFocusEffect(
@@ -80,21 +83,23 @@ export default function Matching() {
       .sort((a, b) => a.distance - b.distance);
   }, [rides, coords]);
 
-  console.log('MATCHING', {
-    status,
-    coords,
-    loadError,
-    loaded: rides.length,
-    nearby: nearby.length,
-    rides: rides.map((r) => ({
-      id: r.id.slice(0, 6),
-      lat: r.origin_lat,
-      lng: r.origin_lng,
-      dist: coords
-        ? Math.round(distanceMeters(coords, { lat: r.origin_lat, lng: r.origin_lng }))
-        : null,
-    })),
-  });
+  const myRequestFor = (rideId: string) =>
+    requests.find(
+      (q) => q.ride_id === rideId && q.passenger_id === userId && q.status !== 'cancelled',
+    );
+
+  const toggleRequest = async (ride: Ride) => {
+    setBusyId(ride.id);
+    setFailed(false);
+    const existing = myRequestFor(ride.id);
+    const ok =
+      existing && (existing.status === 'pending' || existing.status === 'accepted')
+        ? await cancelRequest(existing.id)
+        : await requestRide(ride.id);
+    if (!ok) setFailed(true);
+    await load();
+    setBusyId(null);
+  };
 
   const focus = (ride: NearbyRide) => {
     setSelectedId(ride.id);
@@ -150,6 +155,7 @@ export default function Matching() {
     <View style={styles.header}>
       <Text style={typography.title}>{t('matching.title')}</Text>
       <Text style={typography.caption}>{t('matching.subtitle')}</Text>
+      {failed ? <Text style={typography.caption}>{t('requests.error')}</Text> : null}
     </View>
   );
 
@@ -212,6 +218,18 @@ export default function Matching() {
           }
           renderItem={({ item }) => {
             const selected = item.id === selectedId;
+            const own = item.driver_id === userId;
+            const mine = myRequestFor(item.id);
+            const active = mine?.status === 'pending' || mine?.status === 'accepted';
+            const full = item.seats < 1;
+
+            const requestLabel =
+              mine?.status === 'accepted'
+                ? `${t('requests.accepted')} · ${t('requests.cancel')}`
+                : mine?.status === 'pending'
+                  ? `${t('requests.requested')} · ${t('requests.cancel')}`
+                  : t('requests.request');
+
             return (
               <Pressable
                 onPress={() => focus(item)}
@@ -229,7 +247,7 @@ export default function Matching() {
                 </Text>
                 <Text style={typography.caption}>
                   {formatTime(item.departure_time)} ·{' '}
-                  {t('rides.seatsLeft', { count: item.seats })}
+                  {full ? t('requests.full') : t('rides.seatsLeft', { count: item.seats })}
                 </Text>
                 <Text style={typography.caption}>
                   {t('matching.away', {
@@ -250,12 +268,21 @@ export default function Matching() {
                     </Pressable>
                   </>
                 ) : null}
-                {item.driver_id === userId ? (
+                {item.note ? <Text style={typography.caption}>{item.note}</Text> : null}
+
+                {own ? (
                   <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>
                     {t('matching.yours')}
                   </Text>
-                ) : null}
-                {item.note ? <Text style={typography.caption}>{item.note}</Text> : null}
+                ) : mine?.status === 'declined' ? (
+                  <Text style={typography.caption}>{t('requests.declined')}</Text>
+                ) : (
+                  <Button
+                    label={requestLabel}
+                    onPress={() => toggleRequest(item)}
+                    disabled={busyId === item.id || (full && !active)}
+                  />
+                )}
               </Pressable>
             );
           }}
