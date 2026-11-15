@@ -26,9 +26,13 @@ placeholder: {
   close: 'Menü schließen',
 },
   matching: {
-    title: 'Fahrten in deiner Nähe',
-    subtitle: 'Passend zu deiner Route und Klasse',
-  },
+  title: 'Fahrten in deiner Nähe',
+  subtitle: 'Aus deiner Klasse, nach Entfernung sortiert',
+  empty: 'Gerade keine Fahrten in der Nähe.',
+  noLocation: 'Aktiviere den Standort, um Fahrten in deiner Nähe zu sehen.',
+  enableLocation: 'Standort aktivieren',
+  away: '{{distance}} entfernt',
+},
   profile: {
     title: 'Profil',
     account: 'Konto',

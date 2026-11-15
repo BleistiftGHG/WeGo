@@ -24,8 +24,13 @@ export const en = {
     close: "Close menu",
   },
   matching: {
-    title: "Rides near you",
-    subtitle: "Matched to your route and class",
+  title: 'Rides near you',
+  subtitle: 'From your class, sorted by distance',
+  empty: 'No rides nearby right now.',
+  noLocation: 'Turn on location to see rides near you.',
+  enableLocation: 'Enable location',
+  away: '{{distance}} away',
+    },
   },
   profile: {
     title: "Profile",
