@@ -10,7 +10,15 @@ import { distanceMeters, formatDistance } from '@/lib/nearby';
 import { emitSchoolPicked } from '@/lib/schoolPicker';
 import { supabase } from '@/lib/supabase';
 
-type DbSchool = { id: string; name: string; city: string; lat: number; lng: number };
+type DbSchool = {
+  id: string;
+  name: string;
+  city: string;
+  lat: number;
+  lng: number;
+  logo_url: string | null;
+  logo_url_dark: string | null;
+};
 
 export default function Schools() {
   const router = useRouter();
@@ -24,7 +32,7 @@ export default function Schools() {
   useEffect(() => {
     supabase
       .from('schools')
-      .select('id, name, city, lat, lng')
+      .select('id, name, city, lat, lng, logo_url, logo_url_dark')
       .order('name')
       .then(({ data }) => {
         setSchools((data as DbSchool[]) ?? []);
@@ -39,6 +47,8 @@ export default function Schools() {
       lat: school.lat,
       lng: school.lng,
       detail: school.city,
+      logoUrl: school.logo_url ?? undefined,
+      logoUrlDark: school.logo_url_dark ?? undefined,
       distance: coords ? distanceMeters(coords, school) : 0,
     });
     router.back();
@@ -59,8 +69,13 @@ export default function Schools() {
           key={school.id}
           icon="school-outline"
           title={school.name}
+          logoUrl={school.logo_url}
+          logoUrlDark={school.logo_url_dark}
           subtitle={
-            [school.city, coords ? formatDistance(distanceMeters(coords, school), settings.metric) : '']
+            [
+              school.city,
+              coords ? formatDistance(distanceMeters(coords, school), settings.metric) : '',
+            ]
               .filter(Boolean)
               .join(' · ') || undefined
           }

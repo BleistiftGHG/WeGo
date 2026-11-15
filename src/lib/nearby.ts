@@ -5,6 +5,7 @@ export type Place = {
   lng: number;
   distance: number;
   detail?: string;
+  logoUrlDark?: string;
 };
 
 type Point = { latitude: number; longitude: number };
