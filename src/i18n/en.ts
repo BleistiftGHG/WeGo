@@ -56,6 +56,11 @@ export const en = {
     about: "About",
     version: "Version",
     signOut: "Sign out",
+    namePlaceholder: "Your name",
+    save: "Save",
+    saved: "Saved",
+    nameInvalid: "Use 2 to 30 characters.",
+    nameError: "Could not save. Try again.",
   },
   rides: {
     title: "Rides",

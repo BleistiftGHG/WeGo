@@ -17,6 +17,7 @@ export async function saveOwnName(
   const { data, error } = await supabase.rpc("set_display_name", {
     p_name: name,
   });
+  console.log("SET_NAME", { data, error });
   if (error) return "error";
   if (data === "ok") return "ok";
   if (data === "invalid") return "invalid";

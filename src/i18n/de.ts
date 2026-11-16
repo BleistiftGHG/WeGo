@@ -12,6 +12,9 @@ export const de: Translation = {
     nameTitle: "Wie heißt du?",
     nameHelper:
       "Deine Klasse sieht deinen vollen Namen, alle anderen nur deinen Vornamen.",
+    nameTitle: "Wie heißt du?",
+    nameHelper:
+      "Deine Klasse sieht deinen vollen Namen, alle anderen nur deinen Vornamen.",
   },
   tabs: {
     map: "Karte",
@@ -59,6 +62,11 @@ export const de: Translation = {
     about: "Über",
     version: "Version",
     signOut: "Abmelden",
+    namePlaceholder: "Dein Name",
+    save: "Speichern",
+    saved: "Gespeichert",
+    nameInvalid: "Bitte 2 bis 30 Zeichen.",
+    nameError: "Speichern fehlgeschlagen. Versuch es nochmal.",
   },
   rides: {
     title: "Fahrten",
