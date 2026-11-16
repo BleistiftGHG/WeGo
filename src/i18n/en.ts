@@ -36,6 +36,7 @@ export const en = {
     meeting: "Meeting point",
     openInMaps: "Open in Maps",
     yours: "Your ride",
+    subtitle: "From your school, sorted by distance",
   },
   profile: {
     title: "Profile",

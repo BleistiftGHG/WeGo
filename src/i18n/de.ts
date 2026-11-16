@@ -42,6 +42,7 @@ export const de: Translation = {
     meeting: "Treffpunkt",
     openInMaps: "In Karten öffnen",
     yours: "Deine Fahrt",
+    subtitle: "Aus deiner Schule, nach Entfernung sortiert",
   },
   profile: {
     title: "Profil",
