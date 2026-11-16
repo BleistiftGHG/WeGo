@@ -1,10 +1,17 @@
-import "@/i18n";
+import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { SettingsProvider, useTheme } from "@/context/SettingsContext";
+import "@/i18n";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import { View } from "react-native";
+
+SplashScreen.preventAutoHideAsync();
 
 function Navigator() {
   const { colors, isDark } = useTheme();
+  const [showSplash, setShowSplash] = useState(true);
 
   const subScreen = {
     headerShown: true,
@@ -16,7 +23,7 @@ function Navigator() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <Stack
         screenOptions={{
@@ -40,7 +47,11 @@ function Navigator() {
         <Stack.Screen name="offer" options={subScreen} />
         <Stack.Screen name="schools" options={subScreen} />
       </Stack>
-    </>
+
+      {showSplash ? (
+        <AnimatedSplash onDone={() => setShowSplash(false)} />
+      ) : null}
+    </View>
   );
 }
 
