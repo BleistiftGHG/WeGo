@@ -6,6 +6,9 @@ export const en = {
     invalid: "That code isn't valid. Check it with your teacher.",
     helper: "Your teacher gives you a unique code for your class.",
     networkError: "Something went wrong. Check your connection and try again.",
+    nameTitle: "What is your name?",
+    nameHelper:
+      "Your class sees your full name, everyone else only your first name.",
   },
   tabs: {
     map: "Map",

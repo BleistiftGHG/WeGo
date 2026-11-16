@@ -9,6 +9,9 @@ export const de: Translation = {
     helper: "Deine Lehrkraft gibt dir einen eigenen Code für deine Klasse.",
     networkError:
       "Etwas ist schiefgelaufen. Prüfe deine Verbindung und versuch es nochmal.",
+    nameTitle: "Wie heißt du?",
+    nameHelper:
+      "Deine Klasse sieht deinen vollen Namen, alle anderen nur deinen Vornamen.",
   },
   tabs: {
     map: "Karte",
