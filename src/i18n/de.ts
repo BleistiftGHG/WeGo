@@ -120,4 +120,12 @@ export const de: Translation = {
     error: "Etwas ist schiefgelaufen. Versuch es nochmal.",
     driver: "Fahrer",
   },
+  chat: {
+    placeholder: 'Nachricht…',
+    send: 'Senden',
+    empty: 'Noch keine Nachrichten. Sag Hallo.',
+    noChats: 'Chats erscheinen, sobald eine Fahrt bestätigt ist.',
+    sendError: 'Senden fehlgeschlagen. Versuch es nochmal.',
+    someone: 'Jemand',
+  },
 };

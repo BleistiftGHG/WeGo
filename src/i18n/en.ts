@@ -114,6 +114,14 @@ export const en = {
     noHits: "No results.",
     driver: "Driver",
   },
+  chat: {
+    placeholder: 'Message…',
+    send: 'Send',
+    empty: 'No messages yet. Say hi.',
+    noChats: 'Chats appear once a ride is confirmed.',
+    sendError: 'Could not send. Try again.',
+    someone: 'Someone',
+  },
 };
 
 export type Translation = typeof en;
