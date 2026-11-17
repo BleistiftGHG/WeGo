@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -11,6 +11,7 @@ import { radii, spacing } from '@/constants/theme';
 import { useSettings, useTheme } from '@/context/SettingsContext';
 import { useUserLocation, type Coords } from '@/hooks/useUserLocation';
 import { distanceMeters, formatDistance } from '@/lib/nearby';
+import { fetchNames } from '@/lib/names';
 import { cancelRequest, fetchRequests, requestRide, type RideRequest } from '@/lib/requests';
 import { supabase } from '@/lib/supabase';
 
@@ -37,6 +38,17 @@ type Ride = {
 
 type NearbyRide = Ride & { distance: number };
 
+function Pill({ label }: { label: string }) {
+  const { colors, typography } = useTheme();
+  return (
+    <View style={[styles.pill, { backgroundColor: colors.surface }]}>
+      <Text style={[typography.caption, { color: colors.onSurface, fontWeight: '600' }]}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 export default function Matching() {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
@@ -47,6 +59,7 @@ export default function Matching() {
 
   const [rides, setRides] = useState<Ride[]>([]);
   const [requests, setRequests] = useState<RideRequest[]>([]);
+  const [names, setNames] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -62,8 +75,10 @@ export default function Matching() {
       )
       .gte('departure_time', new Date().toISOString())
       .order('departure_time', { ascending: true });
-    setRides((data as Ride[]) ?? []);
+    const list = (data as Ride[]) ?? [];
+    setRides(list);
     setRequests(await fetchRequests());
+    setNames(await fetchNames(list.map((r) => r.driver_id)));
   }, []);
 
   useFocusEffect(
@@ -80,8 +95,38 @@ export default function Matching() {
         distance: distanceMeters(coords, { lat: r.origin_lat, lng: r.origin_lng }),
       }))
       .filter((r) => !(r.origin_lat === 0 && r.origin_lng === 0) && r.distance <= RADIUS_METERS)
-      .sort((a, b) => a.distance - b.distance);
+      .sort((a, b) => new Date(a.departure_time).getTime() - new Date(b.departure_time).getTime());
   }, [rides, coords]);
+
+  const dayLabel = useCallback(
+    (iso: string) => {
+      const d = new Date(iso);
+      const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+      const diff = Math.round((startOf(d) - startOf(new Date())) / 86400000);
+      if (diff === 0) return t('matching.today');
+      if (diff === 1) return t('matching.tomorrow');
+      return d.toLocaleDateString(i18n.language, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      });
+    },
+    [t, i18n.language],
+  );
+
+  const sections = useMemo(() => {
+    const groups = new Map<string, NearbyRide[]>();
+    for (const ride of nearby) {
+      const d = new Date(ride.departure_time);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      groups.set(key, [...(groups.get(key) ?? []), ride]);
+    }
+    return Array.from(groups.entries()).map(([key, data]) => ({
+      key,
+      title: dayLabel(data[0].departure_time),
+      data,
+    }));
+  }, [nearby, dayLabel]);
 
   const myRequestFor = (rideId: string) =>
     requests.find(
@@ -101,8 +146,8 @@ export default function Matching() {
     setBusyId(null);
   };
 
-  const focus = (ride: NearbyRide) => {
-    setSelectedId(ride.id);
+  const select = (ride: NearbyRide) => {
+    setSelectedId((prev) => (prev === ride.id ? null : ride.id));
     mapRef.current?.animateToRegion(
       {
         latitude: ride.origin_lat,
@@ -142,14 +187,8 @@ export default function Matching() {
     if (url) Linking.openURL(url);
   };
 
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleString(i18n.language, {
-      weekday: 'short',
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatClock = (iso: string) =>
+    new Date(iso).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
 
   const header = (
     <View style={styles.header}>
@@ -187,7 +226,7 @@ export default function Matching() {
             key={ride.id}
             coordinate={{ latitude: ride.origin_lat, longitude: ride.origin_lng }}
             anchor={{ x: 0.5, y: 0.5 }}
-            onPress={() => focus(ride)}
+            onPress={() => select(ride)}
           >
             <MapPin size={ride.id === selectedId ? 28 : 18} />
           </Marker>
@@ -200,9 +239,10 @@ export default function Matching() {
           { backgroundColor: colors.background, borderColor: colors.divider },
         ]}
       >
-        <FlatList
-          data={nearby}
+        <SectionList
+          sections={sections}
           keyExtractor={(ride) => ride.id}
+          stickySectionHeadersEnabled={false}
           ListHeaderComponent={header}
           ListEmptyComponent={
             status === 'denied' ? (
@@ -216,73 +256,94 @@ export default function Matching() {
               <Text style={[typography.caption, styles.emptyText]}>{t('matching.empty')}</Text>
             )
           }
+          renderSectionHeader={({ section }) => (
+            <Text style={[typography.caption, styles.sectionHeader]}>{section.title}</Text>
+          )}
           renderItem={({ item }) => {
-            const selected = item.id === selectedId;
+            const open = item.id === selectedId;
             const own = item.driver_id === userId;
             const mine = myRequestFor(item.id);
             const active = mine?.status === 'pending' || mine?.status === 'accepted';
             const full = item.seats < 1;
+            const driver = names[item.driver_id];
 
-            const requestLabel =
-              mine?.status === 'accepted'
-                ? `${t('requests.accepted')} · ${t('requests.cancel')}`
+            const badge = own
+              ? t('matching.yours')
+              : mine?.status === 'accepted'
+                ? t('requests.accepted')
                 : mine?.status === 'pending'
-                  ? `${t('requests.requested')} · ${t('requests.cancel')}`
-                  : t('requests.request');
+                  ? t('requests.requested')
+                  : null;
+
+            const requestLabel = active ? t('requests.cancel') : t('requests.request');
 
             return (
               <Pressable
-                onPress={() => focus(item)}
+                onPress={() => select(item)}
                 style={[
                   styles.card,
                   {
                     backgroundColor: colors.input,
-                    borderColor: selected ? colors.text : colors.border,
-                    borderWidth: selected ? 2 : StyleSheet.hairlineWidth,
+                    borderColor: open ? colors.text : colors.border,
+                    borderWidth: open ? 2 : StyleSheet.hairlineWidth,
                   },
                 ]}
               >
-                <Text style={typography.body}>
-                  {item.origin_name} → {item.destination_name}
-                </Text>
-                <Text style={typography.caption}>
-                  {formatTime(item.departure_time)} ·{' '}
-                  {full ? t('requests.full') : t('rides.seatsLeft', { count: item.seats })}
-                </Text>
-                <Text style={typography.caption}>
-                  {t('matching.away', {
-                    distance: formatDistance(item.distance, settings.metric),
-                  })}
-                </Text>
-                {item.meeting_point ? (
-                  <>
-                    <Text style={typography.body}>
-                      {t('matching.meeting')}: {item.meeting_point}
+                <View style={styles.topRow}>
+                  <Text style={typography.heading}>{formatClock(item.departure_time)}</Text>
+                  <View style={styles.topRight}>
+                    {badge ? <Pill label={badge} /> : null}
+                    <Text style={typography.caption}>
+                      {full ? t('requests.full') : t('rides.seatsLeft', { count: item.seats })}
                     </Text>
-                    <Pressable onPress={() => openMeeting(item)} hitSlop={8}>
-                      <Text
-                        style={[typography.caption, { color: colors.text, fontWeight: '600' }]}
-                      >
-                        {t('matching.openInMaps')} ↗
-                      </Text>
-                    </Pressable>
-                  </>
-                ) : null}
-                {item.note ? <Text style={typography.caption}>{item.note}</Text> : null}
+                  </View>
+                </View>
 
-                {own ? (
-                  <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>
-                    {t('matching.yours')}
-                  </Text>
-                ) : mine?.status === 'declined' ? (
-                  <Text style={typography.caption}>{t('requests.declined')}</Text>
-                ) : (
-                  <Button
-                    label={requestLabel}
-                    onPress={() => toggleRequest(item)}
-                    disabled={busyId === item.id || (full && !active)}
-                  />
-                )}
+                <Text style={typography.body} numberOfLines={1}>
+                  {(item.origin_town ?? item.origin_name)} → {item.destination_name}
+                </Text>
+
+                <Text style={typography.caption} numberOfLines={1}>
+                  {[driver, formatDistance(item.distance, settings.metric)]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+
+                {open ? (
+                  <View style={[styles.details, { borderTopColor: colors.divider }]}>
+                    {item.meeting_point ? (
+                      <View style={styles.detailRow}>
+                        <Text style={typography.caption}>{t('matching.meeting')}</Text>
+                        <Text style={typography.body}>{item.meeting_point}</Text>
+                        <Pressable onPress={() => openMeeting(item)} hitSlop={8}>
+                          <Text
+                            style={[typography.caption, { color: colors.text, fontWeight: '600' }]}
+                          >
+                            {t('matching.openInMaps')} ↗
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
+
+                    {item.note ? (
+                      <View style={styles.detailRow}>
+                        <Text style={typography.caption}>{t('matching.vehicle')}</Text>
+                        <Text style={typography.body}>{item.note}</Text>
+                      </View>
+                    ) : null}
+
+                    {!own && mine?.status !== 'declined' ? (
+                      <Button
+                        label={requestLabel}
+                        onPress={() => toggleRequest(item)}
+                        disabled={busyId === item.id || (full && !active)}
+                      />
+                    ) : null}
+                    {!own && mine?.status === 'declined' ? (
+                      <Text style={typography.caption}>{t('requests.declined')}</Text>
+                    ) : null}
+                  </View>
+                ) : null}
               </Pressable>
             );
           }}
@@ -299,7 +360,7 @@ export default function Matching() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  map: { height: '45%' },
+  map: { height: '40%' },
   sheet: {
     flex: 1,
     marginTop: -radii.lg,
@@ -308,9 +369,34 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     overflow: 'hidden',
   },
-  content: { paddingHorizontal: spacing.md, paddingTop: spacing.lg, gap: spacing.sm },
-  header: { marginBottom: spacing.sm, gap: spacing.xs },
-  card: { padding: spacing.md, borderRadius: radii.md, gap: spacing.xs },
+  content: { paddingHorizontal: spacing.md, paddingTop: spacing.lg },
+  header: { marginBottom: spacing.xs, gap: spacing.xs },
+  sectionHeader: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  card: {
+    padding: spacing.md,
+    borderRadius: radii.md,
+    gap: 4,
+    marginBottom: spacing.sm,
+  },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  topRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  pill: {
+    paddingVertical: 2,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radii.pill,
+  },
+  details: {
+    marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: spacing.sm,
+  },
+  detailRow: { gap: 2 },
   empty: { gap: spacing.md, marginTop: spacing.md },
   emptyText: { textAlign: 'center', marginTop: spacing.md },
 });
