@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/SettingsContext';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  usePushNotifications();
 
   const icon =
     (name: IconName) =>
@@ -30,14 +32,8 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.background },
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{ title: t('tabs.map'), tabBarIcon: icon('map') }}
-      />
-      <Tabs.Screen
-        name="rides"
-        options={{ title: t('tabs.rides'), tabBarIcon: icon('car') }}
-      />
+      <Tabs.Screen name="home" options={{ title: t('tabs.map'), tabBarIcon: icon('map') }} />
+      <Tabs.Screen name="rides" options={{ title: t('tabs.rides'), tabBarIcon: icon('car') }} />
       <Tabs.Screen
         name="messages"
         options={{ title: t('tabs.messages'), tabBarIcon: icon('chatbubbles') }}
