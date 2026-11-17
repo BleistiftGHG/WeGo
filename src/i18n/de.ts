@@ -127,5 +127,6 @@ export const de: Translation = {
     noChats: 'Chats erscheinen, sobald eine Fahrt bestätigt ist.',
     sendError: 'Senden fehlgeschlagen. Versuch es nochmal.',
     someone: 'Jemand',
+    you: 'Du',
   },
 };

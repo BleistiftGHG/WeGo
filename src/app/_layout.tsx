@@ -46,7 +46,15 @@ function Navigator() {
         <Stack.Screen name="matching" options={subScreen} />
         <Stack.Screen name="offer" options={subScreen} />
         <Stack.Screen name="schools" options={subScreen} />
-        <Stack.Screen name="chat/[id]" options={subScreen} />
+        <Stack.Screen
+          name="chat/[id]"
+          options={{
+            ...subScreen,
+            headerTransparent: false,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colors.background },
+          }}
+        />
       </Stack>
 
       {showSplash ? (

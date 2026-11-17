@@ -121,6 +121,7 @@ export const en = {
     noChats: 'Chats appear once a ride is confirmed.',
     sendError: 'Could not send. Try again.',
     someone: 'Someone',
+    you: 'You',
   },
 };
 
