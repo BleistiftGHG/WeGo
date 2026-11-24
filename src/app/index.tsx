@@ -34,15 +34,23 @@ export default function Onboarding() {
     let cancelled = false;
 
     if (!settings.classCode) {
+      setError(null);
       setStep("code");
       return;
     }
 
     setStep("checking");
-    fetchOwnName().then((own) => {
-      if (cancelled) return;
-      setStep(own.trim() ? "done" : "name");
-    });
+    setError(null);
+    fetchOwnName()
+      .then((own) => {
+        if (cancelled) return;
+        setStep(own.trim() ? "done" : "name");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("network");
+        setStep("name");
+      });
 
     return () => {
       cancelled = true;
