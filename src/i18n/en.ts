@@ -126,7 +126,7 @@ export const en = {
     someone: 'Someone',
     you: 'You',
   },
-  map: {
+    map: {
     locate: 'Center on my location',
     view3d: 'Switch to 3D',
     view2d: 'Switch to 2D',

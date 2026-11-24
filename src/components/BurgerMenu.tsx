@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { GlassIconButton } from '@/components/Glass';
 import { radii, spacing } from '@/constants/theme';
 import { useSettings, useTheme } from '@/context/SettingsContext';
 
@@ -111,21 +112,13 @@ export function BurgerMenu() {
     <>
       <View style={styles.edge} {...edgePan.panHandlers} />
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('menu.open')}
+      <GlassIconButton
+        label={t('menu.open')}
         onPress={open}
-        style={[
-          styles.button,
-          {
-            top: insets.top + spacing.xs,
-            backgroundColor: colors.background,
-            borderColor: colors.border,
-          },
-        ]}
+        style={{ position: 'absolute', left: spacing.md, top: insets.top + spacing.xs }}
       >
-        <Ionicons name="menu" size={24} color={colors.text} />
-      </Pressable>
+        {(color) => <Ionicons name="menu" size={24} color={color} />}
+      </GlassIconButton>
 
       <Modal visible={visible} transparent animationType="none" onRequestClose={() => close()}>
         <GestureHandlerRootView style={styles.root}>
@@ -185,19 +178,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: EDGE_WIDTH,
   },
-  button: {
-    position: 'absolute',
-    left: spacing.md,
-    width: 44,
-    height: 44,
-    borderRadius: radii.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  root: {
-    flex: 1,
-  },
+  root: { flex: 1 },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
