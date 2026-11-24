@@ -132,4 +132,12 @@ export const de: Translation = {
     someone: 'Jemand',
     you: 'Du',
   },
+  map: {
+    locate: 'Auf meinen Standort zentrieren',
+    view3d: 'Auf 3D wechseln',
+    view2d: 'Auf 2D wechseln',
+    north: 'Nach Norden ausrichten',
+    satellite: 'Satellit anzeigen',
+    standard: 'Karte anzeigen',
+  },
 };

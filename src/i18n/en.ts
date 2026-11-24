@@ -126,6 +126,14 @@ export const en = {
     someone: 'Someone',
     you: 'You',
   },
+  map: {
+    locate: 'Center on my location',
+    view3d: 'Switch to 3D',
+    view2d: 'Switch to 2D',
+    north: 'Face north',
+    satellite: 'Show satellite',
+    standard: 'Show map',
+  },
 };
 
 export type Translation = typeof en;
